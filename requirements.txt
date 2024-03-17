@@ -1,0 +1,7 @@
+pandas
+sqlalchemy
+requests
+loguru
+pyuseragents
+beautifulsoup4
+web3
