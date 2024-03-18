@@ -1,18 +1,13 @@
 import random
-import re
 import string
 import datetime
-import uuid
 
 import json
 from html.parser import HTMLParser
-from bs4 import BeautifulSoup
-from eth_account.messages import encode_defunct
 from web3 import Web3, HTTPProvider
 from eth_account import Account
 
 from blockchain_data.blockchain_data import linea
-from headers.headers import *
 from gas_staff.gas import *
 
 
@@ -53,9 +48,6 @@ class LineaTxnManager:
         self.w3.provider = HTTPProvider(linea.rpc, session=self.session)
         self.account = Account.from_key(key)
         self.address = self.account.address
-        self.bit_avatar_token = None
-        self._sending_me_token = None
-        self.app_token = None
 
     def _submit_and_log_transaction(self, txn):
         try:
@@ -71,29 +63,6 @@ class LineaTxnManager:
         except Exception as e:
             logger.critical(f"Error while making txn for wallet {self.address}: \n{e}")
             return 0
-
-    def _send_mail_code_confirmation_pictograph(self, email, code):
-        payload = {"email": str(email),
-                   "code": str(code)}
-
-        try:
-            response = requests.post(url='https://picto-two.vercel.app/api/auth/otp/code',
-                                     json=payload, proxies=self.session.proxies)
-            response_json = response.json()
-            # print(json.dumps(response.json(), indent=4))
-
-            if response_json.get('haveAccess') and response_json['haveAccess'] is True:
-                logger.info(f"Verification code confirmed")
-                return True
-            else:
-                logger.error(f"Unexpected response structure: {email}."
-                             f"\nResponse: {response.text}")
-                return False
-
-        except Exception as e:
-            logger.critical(f"Exception during sending verification code to: {email}."
-                            f"\nException: {e}")
-            return False
 
     def _get_memory_card_id(self, max_retry=3):
         retry_count = 0
@@ -178,106 +147,6 @@ class LineaTxnManager:
 
         logger.critical(f"Could not retrieve data after {MAX_RETRIES} retries")
         return None, None, None, None
-
-    def _sign_in_sending_me(self):
-        ua = random_ua()
-        try:
-            headers = sending_me_headers()
-            response = requests.get('https://verify.walletconnect.com/89e45e13eca1869843206e9b2ac7421f',
-                                    headers=headers, proxies=self.session.proxies)
-            response.raise_for_status()
-
-            logger.info('retrieved HTML content')
-            soup = BeautifulSoup(response.content, 'html.parser')
-
-            # Find the <script> tag and extract the 'src' attribute
-            script_tag = soup.find('script')
-            src_content = script_tag['src']
-
-            # Extract the token from the 'src' attribute using a regular expression
-            token_match = re.search(r"token=([\w.]+)", src_content)
-            if token_match:
-                self._sending_me_token = token_match.group(1)
-                logger.info('pre-login token extracted')
-            else:
-                logger.error('token not found in script tag')
-                return 0
-
-        except Exception as e:
-            logger.critical(f"Error while getting pre-login token"
-                            f"\nError: {e}")
-            return 0
-
-        logger.success('got token, proceeding to request 2')
-
-        try:
-            url1 = 'https://beginner.sending.network/_api/client/unstable/did/pre_login1'
-            payload = {"did": f"did:sdn:{self.address.lower()[2:]}"}  # Remove the "0x" prefix
-
-            headers = sending_me_headers(content_length=58, ua=ua)
-            response = requests.post(url1, json=payload, headers=headers, proxies=self.session.proxies)
-            response.raise_for_status()
-
-            response_json = response.json()
-            message = response_json.get('message')
-            random_server = response_json.get('random_server')
-            updated = response_json.get('updated')
-            logger.info('got message data')
-
-        except Exception as e:
-            logger.error(f"Error while getting message."
-                         f"\nError: {e}")
-            return 0
-
-        logger.success('got message to sign, proceeding to request 3')
-
-        try:
-            url = "https://hs.sending.me/_api/client/r0/sdn_app_token"
-            payload = {
-                "wallet_address": str(self.address.lower()),
-                "message": str(message),
-                "token": str(self._sending_me_token)
-            }
-
-            headers = sending_me_headers(content_length=324, ua=ua)
-
-            response = requests.post(url, json=payload, headers=headers, proxies=self.session.proxies)
-            response.raise_for_status()
-            app_token = response_json.get('app_token', 'Default token value if not found')
-            self.app_token = app_token
-            logger.info('retrieved app-token')
-
-        except Exception as e:
-            logger.error(f"failed while getting app-token."
-                         f"\nError: {e}")
-            return 0
-
-        logger.success('got app-token, proceeding to actual login')
-        signature = self.account.sign_message(encode_defunct(text=message))
-
-        try:
-            url1 = "https://beginner.sending.network/_api/client/unstable/did/login"
-            payload = {
-                "type": "m.login.did.identity",
-                "updated": str(updated),
-                "identifier": {
-                    "did": f"did:sdn:{self.address.lower()}",
-                    "token": signature.signature.hex(),
-                    "address": f"did:sdn:{self.address.lower()}",
-                    "message": str(message),
-                    "app_token": str(self.app_token),
-                },
-                "random_server": str(random_server),
-                "initial_device_display_name": "chat.sending.me (Chrome, Windows)"
-            }
-            headers = sending_me_headers(content_length=762, ua=ua)
-            response = requests.post(url1, json=payload, headers=headers, proxies=self.session.proxies)
-            response.raise_for_status()
-            print(json.dumps(response.json(), indent=4))
-
-        except Exception as e:
-            logger.error(f"Failed to make or process the third request. Error: {e}")
-            return 0
 
     def bit_avatar_wrap(self):
         if self.mint_bit_avatar() == 1:
@@ -538,51 +407,6 @@ class LineaTxnManager:
             return self._submit_and_log_transaction(txn)
         except Exception as e:
             logger.critical(e)
-            return 0
-
-    def create_account_sonorus(self):
-        part1 = str(uuid.uuid4()).replace('-', '')
-        part2 = str(uuid.uuid4()).replace('-', '')
-        nonce = f"{part1}-{part2}"
-        characters = string.ascii_letters + string.digits
-        template = f"Welcome to Sonorus!\n\nThis request is for a security check and will not trigger a blockchain transaction or cost any gas fees.\n\nThis authority will update after 24 hours.\n\nYour Wallet address: {self.address}\n\nNonce: {nonce}"
-        ing = ''.join(random.choice(characters) for _ in range(4))
-
-        headers = {
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Content-Length': '259',
-            'Content-Type': 'application/json',
-            'Origin': 'https://sonorus.network',
-            'Referer': 'https://sonorus.network/',
-            'Sec-Ch-Ua': '"Not A(Brand";v="99", "Opera";v="107", "Chromium";v="121"',
-            'Sec-Ch-Ua-Mobile': '?0',
-            'Sec-Ch-Ua-Platform': '"Windows"',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site',
-            'User-Agent': random_ua(),
-            'X-Fp-Requestid': str(str(time.time()) + '56' + ing),
-            'X-Sono-App-Version': '9.9.9',
-            'X-Sono-Os': 'web'
-        }
-        try:
-            signature = self.account.sign_message(encode_defunct(text=template))
-            current_timestamp = int(time.time())
-            random_string = 'ay49uK2Pd4lpuCsZqDU0'
-
-            payload = {
-                "device_id": random_string,
-                "address": str(self.address),
-                "sign_at": current_timestamp,
-                "signature": str(signature.signature.hex())
-            }
-
-            response = requests.post('https://core-api.sonorus.network/v1/auth/login', json=payload, headers=headers,
-                                     proxies=self.session.proxies)
-            print(json.dumps(response.json(), indent=4))
-        except Exception:
             return 0
 
     def swap_on_gamic_dex(self):
