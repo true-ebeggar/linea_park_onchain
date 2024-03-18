@@ -55,7 +55,7 @@ def process_account(account_number, logger):
                 'Task_403': manager.mint_emerald_enchanted_key,
                 'Task_404': manager.bit_avatar_wrap,
                 'Task_405': manager.read_on_curate,
-                # 'Task_406': dummy_function_1,
+                'Task_406': manager.fire_moneygun_sending_me,
                 # 'Task_407': dummy_function_2,
                 # 'Task_408': dummy_function_1,
                 # 'Task_501': dummy_function_2,
@@ -145,5 +145,7 @@ def main():
     for future in as_completed(futures):
         future.result()
 
+
 if __name__ == "__main__":
     main()
+    

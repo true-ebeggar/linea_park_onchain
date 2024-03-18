@@ -520,7 +520,26 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
+    def fire_moneygun_sending_me(self):
+        data = ('0xf02bc6d500000000000000000000000000000000000000000000000000005af3107a'
+                '4000000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+        gas = random.randint(35000, 50000)
 
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(sending_me_money_gun_contract),
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
+                'gas': gas,
+                'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
 
 
 if __name__ == "__main__":
