@@ -6,7 +6,6 @@ from linea_park_onchain.config import *
 from linea_park_onchain.headers.headers import lineascan_headers
 
 
-
 def gas_gate():
     attempt = 0
     while True:
@@ -26,9 +25,9 @@ def gas_gate():
                 time.sleep(40)
         except Exception as e:
             attempt += 1
-            if attempt == 3:
-                 logger.critical(f"error after {attempt} attempt"
-                                 f"\n{e}")
+            if attempt == 10:
+                logger.critical(f"error after {attempt} consecutive attempts"
+                                f"\n{e}")
             time.sleep(1)
 
 
