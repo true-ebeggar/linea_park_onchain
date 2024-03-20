@@ -8,6 +8,7 @@ from sqlalchemy.exc import LegacyAPIWarning
 from data.db import get_session, excel_to_sql
 from staff import LineaTxnManager
 from gas_staff.gas import *
+from config import *
 
 excel_to_sql('data\\data.xlsx')
 DBSession, Account = get_session()
