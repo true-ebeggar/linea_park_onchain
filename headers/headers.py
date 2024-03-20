@@ -1,26 +1,26 @@
 from pyuseragents import random as random_ua
 
-def sending_me_headers(content_length=None, ua=None):
+
+def yooldo_headers(content_length=None, yooldo_token=None):
     headers = {
-        'accept': '*/*',
-        'accept-encoding': 'gzip, deflate, br',
-        'accept-language': 'en,en-US;q=0.9',
-        'content-length': '324',
-        'content-type': 'application/json',
-        'origin': 'https://chat.sending.me',
-        'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-        'sec-ch-ua-mobile': '?0',
-        'sec-ch-ua-platform': '"Windows"',
-        'sec-fetch-dest': 'empty',
-        'sec-fetch-mode': 'cors',
-        'sec-fetch-site': 'same-site',
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en,en-US;q=0.9",
+        "Content-Type": "application/json",
+        "Origin": "https://app.yooldo.gg",
+        "Referer": "https://app.yooldo.gg/",
+        "Sec-Ch-Ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "User-Agent": random_ua(),
     }
     if content_length is not None:
         headers['Content-Length'] = str(content_length)
-    if ua is not None:
-        headers['User-Agent'] = ua
-    else:
-        headers['User-Agent'] = random_ua()
+    if yooldo_token is not None:
+        headers['Authorization'] = f'Bearer {yooldo_token}'
     return headers
 
 

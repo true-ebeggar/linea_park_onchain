@@ -4,11 +4,13 @@ import datetime
 
 import json
 from html.parser import HTMLParser
+from eth_account.messages import encode_defunct
 from web3 import Web3, HTTPProvider
 from eth_account import Account
 
 from blockchain_data.blockchain_data import linea
 from gas_staff.gas import *
+from headers.headers import *
 
 
 class MyHTMLParser(HTMLParser):
@@ -48,6 +50,7 @@ class LineaTxnManager:
         self.w3.provider = HTTPProvider(linea.rpc, session=self.session)
         self.account = Account.from_key(key)
         self.address = self.account.address
+        self.yooldo_token = None
 
     def _submit_and_log_transaction(self, txn):
         try:
@@ -83,11 +86,11 @@ class LineaTxnManager:
                         return None
                 else:
                     logger.error(f"Unexpected response structure while checking NFT-id."
-                                      f"\nResponse: {response.text}")
+                                 f"\nResponse: {response.text}")
                     return None
             except Exception as e:
                 logger.critical(f"Exception during checking NFT-id."
-                                     f"\nException: {e}")
+                                f"\nException: {e}")
                 retry_count += 1
                 if retry_count < MAX_RETRIES:
                     logger.info(f"Retrying in 10 seconds... (Attempt {retry_count}/{MAX_RETRIES})")
@@ -96,6 +99,111 @@ class LineaTxnManager:
                     logger.critical("Max retries reached. Failed to get memory card ID.")
                     return None
 
+    def _yooldo_registration(self):
+        try:
+            payload = {"walletAddress": self.address}
+            response = requests.post('https://yooldo.be.by-catze.xyz/nonce',
+                                     headers=yooldo_headers(content_length=62),
+                                     json=payload, proxies=self.session.proxies)
+
+            message = response.json()["nonce"]
+            signature = self.account.sign_message(encode_defunct(text=message))
+            simbols = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+
+            payload = {
+                "chainId": 59144,
+                "signature": signature.signature.hex(),
+                "email": f"{simbols}@gmail.com",
+                "walletAddress": str(self.address.lower()),
+            }
+
+            response = requests.post('https://yooldo.be.by-catze.xyz/auth/registerWithWallet',
+                                     headers=yooldo_headers(content_length=252), json=payload,
+                                     proxies=self.session.proxies)
+
+            if response.status_code == 201:
+                if "id" in response.json():
+                    logger.success(f"yooldo account registered, it ID: {response.json()['id']}")
+                    return 0
+            elif response.status_code == 409:
+                logger.warning(f"account already exist... which is good")
+                return 0
+        except Exception as e:
+            logger.error("error while account creation."
+                         f"\nError: {e}")
+            return 1
+
+    def _get_token_yooldo(self):
+        try:
+            payload = {"walletAddress": self.address}
+            response = requests.post('https://yooldo.be.by-catze.xyz/nonce',
+                                     headers=yooldo_headers(content_length=62),
+                                     json=payload, proxies=self.session.proxies)
+
+            message = response.json()["nonce"]
+            signature = self.account.sign_message(encode_defunct(text=message))
+
+            payload = {
+                "chainId": 59144,
+                "signature": signature.signature.hex(),
+                "walletAddress": str(self.address.lower()),
+            }
+
+            response = requests.post('https://yooldo.be.by-catze.xyz/auth/loginWithWallet',
+                                     headers=yooldo_headers(content_length=252), json=payload,
+                                     proxies=self.session.proxies)
+
+            if response.status_code == 201:
+                token = response.json()["accessToken"]
+                self.yooldo_token = token
+                logger.success(f"yooldo token obtained...")
+                return 0
+        except Exception as e:
+            logger.error("error while obtaining yooldo token"
+                         f"\nError: {e}")
+            return 1
+
+
+    def _get_txn_data_yooldo(self):
+        with open("data\\yooldo_codes.txt", 'r') as file:
+            lines = file.readlines()
+        lines = [line.strip() for line in lines]
+        if not lines:
+            logger.critical("yooldo codes has ended!")
+            return 0
+
+        code = random.choice(lines)
+
+        url = f"https://yooldo.be.by-catze.xyz/linea-park/rpd/validateUID?uid={code}"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/93.0.4577.82 Safari/537.36",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9",
+            'Authorization': f'Bearer {self.yooldo_token}'
+        }
+
+        response = requests.options(url, headers=headers, proxies=self.session.proxies)
+
+        headers = {
+            "User-Agent": random_ua(),
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.9",
+            'Authorization': f'Bearer {self.yooldo_token}'
+        }
+        response = requests.get(url, headers=headers, proxies=self.session.proxies)
+        print(response.status_code)
+        print(response.headers)
+        print(response.content)
+
+
+
+    def yooldo_random_defence_wrap(self):
+        if self._yooldo_registration() == 0:
+            if self._get_token_yooldo() == 0:
+                self._get_txn_data_yooldo()
+        else:
+            logger.critical("yooldo account registration failed, exiting...")
+            return 1
     def _get_txn_data_gamic(self):
         retry_count = 0
 
@@ -346,28 +454,6 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
-    def yooldo_wallpaper_A(self):
-        part1 = "0xa20a3252"
-        part3 = "000000000000000000000000000000000000000000000000000000000000"
-        value = format(random.randint(0, 0xFFFF), '04x')
-        data = part1 + value + part3
-
-        gas_price = get_gas()
-
-        try:
-            txn = {
-                'to': self.w3.to_checksum_address('0xf5b709c209c3ba5e837d517bb2719e3d2da76629'),
-                'value': 0,
-                'gas': random.randint(300000, 350000),
-                'data': data,
-                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
-                'nonce': self.w3.eth.get_transaction_count(self.address),
-            }
-            return self._submit_and_log_transaction(txn)
-        except Exception as e:
-            logger.critical(e)
-            return 0
-
     def check_in_bit_avatar(self):
         data = '0x183ff085'
         gas = random.randint(35000, 50000)
@@ -378,6 +464,27 @@ class LineaTxnManager:
             txn = {
                 'to': self.w3.to_checksum_address(bit_avatar_contract),
                 'value': 0,
+                'gas': gas,
+                'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def fire_moneygun_sending_me(self):
+        data = ('0xf02bc6d500000000000000000000000000000000000000000000000000005af3107a'
+                '4000000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+        gas = random.randint(35000, 50000)
+
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(sending_me_money_gun_contract),
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
                 'gas': gas,
                 'data': data,
                 'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
@@ -520,29 +627,9 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
-    def fire_moneygun_sending_me(self):
-        data = ('0xf02bc6d500000000000000000000000000000000000000000000000000005af3107a'
-                '4000000000000000000000000000eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-        gas = random.randint(35000, 50000)
-
-        gas_price = get_gas()
-
-        try:
-            txn = {
-                'to': self.w3.to_checksum_address(sending_me_money_gun_contract),
-                'value': int(self.w3.to_wei(0.0001, 'ether')),
-                'gas': gas,
-                'data': data,
-                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
-                'nonce': self.w3.eth.get_transaction_count(self.address),
-            }
-            return self._submit_and_log_transaction(txn)
-        except Exception as e:
-            logger.critical(e)
-            return 0
-
 
 if __name__ == "__main__":
     key = ''
     proxy = ''
     m = LineaTxnManager(key, proxy)
+    m.yooldo_random_defence_wrap()
