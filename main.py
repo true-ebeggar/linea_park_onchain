@@ -18,7 +18,6 @@ def dummy_function_1(account_number, logger):
     logger.info(f"Performing dummy function 1 for account {account_number}")
     time.sleep(random.uniform(1, 5))
 
-
 def dummy_function_2(account_number, logger):
     logger.info(f"Performing dummy function 2 for account {account_number}")
     time.sleep(random.uniform(1, 5))

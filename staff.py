@@ -529,7 +529,7 @@ class LineaTxnManager:
             txn = {
                 'to': to,
                 'value': int(value),
-                'gas': gas_limit,
+                'gas': int(gas_limit),
                 'data': data,
                 'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
                 'nonce': self.w3.eth.get_transaction_count(self.address),
