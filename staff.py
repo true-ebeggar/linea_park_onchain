@@ -3,10 +3,12 @@ import string
 import datetime
 
 import json
+import requests
 from html.parser import HTMLParser
 from eth_account.messages import encode_defunct
 from web3 import Web3, HTTPProvider
 from eth_account import Account
+
 
 from blockchain_data.blockchain_data import linea
 from gas_staff.gas import *
