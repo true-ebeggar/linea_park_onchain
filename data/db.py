@@ -3,6 +3,7 @@ import sqlite3
 import os
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import sessionmaker, declarative_base
+from loguru import logger
 
 
 def get_session():
@@ -10,6 +11,7 @@ def get_session():
         pass
     else:
         excel_to_sql('data.xlsx')
+        logger.warning("database created, if you need new db, delete or rename current one and change .exel...")
 
     Base = declarative_base()
 
@@ -86,15 +88,11 @@ def excel_to_sql(excel_path):
     db_name = 'accounts.db'
     df = pd.read_excel(excel_path)
 
-    # Ensure column names are valid SQLite identifiers
     df.columns = [col.replace(' ', '_').lower() for col in df.columns]
 
-    # Step 2: Connect to the SQL database
     conn = sqlite3.connect(db_name)
     cursor = conn.cursor()
 
-    # Step 3: Create a SQL table
-    # Dynamically build column definitions, ensuring no trailing commas
     task_columns = ', '.join(["{} INTEGER".format(col) for col in df.columns[3:]])
     create_table_query = f"""
         CREATE TABLE IF NOT EXISTS accounts (
@@ -121,10 +119,10 @@ def excel_to_sql(excel_path):
         except sqlite3.IntegrityError as e:
             print(f"Error inserting {row}: {e}")
 
-    # Commit changes and close the connection
     conn.commit()
     conn.close()
 
 
 if __name__ == '__main__':
     excel_to_sql('data.xlsx')
+    
