@@ -10,7 +10,7 @@ from staff import LineaTxnManager
 from gas_staff.gas import *
 from config import *
 
-excel_to_sql('data\\data.xlsx')
+excel_to_sql('data/data.xlsx')
 DBSession, Account = get_session()
 
 
@@ -67,10 +67,10 @@ def process_account(account_number, logger):
                 # 'Task_507': dummy_function_2,
                 'Task_508': manager.adopt_cat_call,
                 # 'Task_509': dummy_function_2,
-                # 'Task_601': dummy_function_1,
-                # 'Task_602': dummy_function_2,
-                # 'Task_603': dummy_function_1,
-                # 'Task_604': dummy_function_2,
+                'Task_601': manager.mint_NFTbadge,
+                'Task_602': manager.mint_battlemon,
+                # 'Task_603': dummy_function_2,
+                'Task_604': manager.mint_expedition_legacy,
                 # 'Task_605': dummy_function_1,
                 # 'Task_606': dummy_function_2,
                 # 'Task_607': dummy_function_1,
@@ -119,7 +119,7 @@ def process_account(account_number, logger):
                 else:
                     continue
 
-            logger.info(f'it look like all possible action is done for account {acc.address}')
+            logger.warning(f'it look like all possible action is done for account {acc.address}')
 
 
 def main():

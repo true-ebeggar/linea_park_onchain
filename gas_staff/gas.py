@@ -1,33 +1,29 @@
 import time
-import requests
+from web3 import Web3
 from loguru import logger
-
 from linea_park_onchain.config import *
-from linea_park_onchain.headers.headers import lineascan_headers
+from linea_park_onchain.blockchain_data import blockchain_data
 
 
 def gas_gate():
     start_time = time.time()
     while True:
         try:
-            response = requests.get('https://glinea.blockscan.com/gasapi.ashx?apikey=key&method=gasoracle',
-                                    headers=lineascan_headers())
-            gas_data = response.json()
-            proposed_gas_price = float(gas_data['result']['ProposeGasPrice'])
-            price = float(gas_data['result']['UsdPrice'])
+            w3 = Web3(Web3.HTTPProvider(blockchain_data.linea.rpc))
+            gas_price = w3.eth.gas_price
+            proposed_gas_price = gas_price / 1e9
             if proposed_gas_price <= MAX_GAS:
-                logger.success(f"gas: {proposed_gas_price} < {MAX_GAS} Eth price - {round(price, 2)}")
+                logger.success(f"gas: {proposed_gas_price} < {MAX_GAS}")
                 return proposed_gas_price
             else:
-                logger.error(f"gas: {proposed_gas_price} > {MAX_GAS} Eth price - {round(price, 2)}")
+                logger.error(f"gas: {proposed_gas_price} > {MAX_GAS}")
         except Exception:
+            time.sleep(1)
             pass
-
         elapsed_time = time.time() - start_time
-        if elapsed_time >= 60:
-            logger.warning("unable to get gas after 1 minute.")
+        if elapsed_time >= 10:
+            logger.warning("unable to get gas after 10-sec.")
             return None
-
         time.sleep(1)
 
 
@@ -35,17 +31,15 @@ def get_gas():
     start_time = time.time()
     while True:
         try:
-            response = requests.get('https://glinea.blockscan.com/gasapi.ashx?apikey=key&method=gasoracle',
-                                    headers=lineascan_headers())
-            gas_data = response.json()
-            proposed_gas_price = float(gas_data['result']['ProposeGasPrice'])
+            w3 = Web3(Web3.HTTPProvider(blockchain_data.linea.rpc))
+            gas_price = w3.eth.gas_price
+            proposed_gas_price = gas_price / 1e9
             return proposed_gas_price
         except Exception:
+            time.sleep(1)
             pass
-
         elapsed_time = time.time() - start_time
-        if elapsed_time >= 60:
-            logger.warning("unable to get gas after 1 minute.")
+        if elapsed_time >= 10:
+            logger.warning("unable to get gas after 10-sec.")
             return None
-
         time.sleep(1)

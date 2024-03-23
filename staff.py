@@ -11,6 +11,7 @@ from eth_account import Account
 from blockchain_data.blockchain_data import linea
 from gas_staff.gas import *
 from headers.headers import *
+from contracts import *
 
 
 class MyHTMLParser(HTMLParser):
@@ -163,7 +164,6 @@ class LineaTxnManager:
                          f"\nError: {e}")
             return 1
 
-
     def _get_txn_data_yooldo(self):
         with open("data\\yooldo_codes.txt", 'r') as file:
             lines = file.readlines()
@@ -195,8 +195,6 @@ class LineaTxnManager:
         print(response.headers)
         print(response.content)
 
-
-
     def yooldo_random_defence_wrap(self):
         if self._yooldo_registration() == 0:
             if self._get_token_yooldo() == 0:
@@ -204,6 +202,7 @@ class LineaTxnManager:
         else:
             logger.critical("yooldo account registration failed, exiting...")
             return 1
+
     def _get_txn_data_gamic(self):
         retry_count = 0
 
@@ -406,6 +405,33 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
+    def mint_satoshi_universe_battle_pass(self):
+        try:
+            contract_address = self.w3.to_checksum_address(satoshi_universe_contract)
+            with open('ABI/satoshi_universe_battle_pass.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(250000, 350000)
+            txn = contract.functions.mint((
+                self.w3.to_checksum_address(self.address),
+                self.w3.to_checksum_address('0x0dE240B2A3634fCD72919eB591A7207bDdef03cd'),
+                1,
+                [],
+                1,
+                b''
+            )).build_transaction({
+                'value': self.w3.to_wei(0.00015, 'ether'),
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
+
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
     def mint_bit_avatar(self):
         code = ''.join(random.choice(string.hexdigits) for _ in range(24))
         url = f"https://api.bitavatar.io/v1/avatar/{code}"
@@ -600,27 +626,59 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
-    def mint_satoshi_universe_battle_pass(self):
+    def mint_NFTbadge(self):
         try:
-            contract_address = self.w3.to_checksum_address(satoshi_universe_contract)
-            with open('ABI/satoshi_universe_battle_pass.json', 'r') as abi:
+            contract_address = self.w3.to_checksum_address(NFTbadge_contract)
+            with open('ABI/NFTBadge.json', 'r') as abi:
                 contract_abi = json.load(abi)
             contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
 
-            gas = random.randint(250000, 350000)
-            txn = contract.functions.mint((
-                self.w3.to_checksum_address(self.address),
-                self.w3.to_checksum_address('0x0dE240B2A3634fCD72919eB591A7207bDdef03cd'),
-                1,
-                [],
-                1,
-                b''
-            )).build_transaction({
-                'value': self.w3.to_wei(0.00015, 'ether'),
+            gas = random.randint(300000, 340000)
+            txn = contract.functions.mint().build_transaction({
+                'value': 0,
                 'gas': gas,
                 'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             })
+
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_battlemon(self):
+        try:
+            contract_address = self.w3.to_checksum_address(battlemon_contract)
+            with open('ABI/battlemon.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(200000, 250000)
+            txn = contract.functions.safeMint().build_transaction({
+                'value': 0,
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
+
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_expedition_legacy(self):
+        data = "0x1249c58b"
+        gas = random.randint(100000, 150000)
+        gas_price = get_gas()
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(expedition_legacy_contract),
+                'value': int(self.w3.to_wei(0.0003, 'ether')),
+                'gas': gas,
+                'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
 
             return self._submit_and_log_transaction(txn)
         except Exception as e:
