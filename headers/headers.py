@@ -40,3 +40,58 @@ def lineascan_headers():
         'User-Agent': random_ua(),
     }
 
+
+def ultipilot_headers_1():
+    return {
+        "Accept": "*/*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en,en-US;q=0.9",
+        "Access-Control-Request-Headers": "content-type,ul-auth-api-key",
+        "Access-Control-Request-Method": "POST",
+        "Origin": "https://pilot-linea.ultiverse.io",
+        "Referer": "https://pilot-linea.ultiverse.io/",
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "same-site",
+        "Ul-Auth-Api-Key": "YWktYWdlbnRAZFd4MGFYWmxjbk5s",
+        "User-Agent": random_ua()
+    }
+
+
+def ultipilot_headers_2():
+    return {
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Accept-Language": "en,en-US;q=0.9",
+            "Content-Length": "219",
+            "Content-Type": "application/json",
+            "Origin": "https://pilot-linea.ultiverse.io",
+            "Referer": "https://pilot-linea.ultiverse.io/",
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "Ul-Auth-Api-Key": "YWktYWdlbnRAZFd4MGFYWmxjbk5s",
+            "User-Agent": random_ua()
+    }
+
+
+def ultipilot_headers_3(address: str, token: str):
+    return {
+        'Accept': '*/*',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'en,en-US;q=0.9',
+        'Content-Length': '90',
+        'Content-Type': 'application/json',
+        'Origin': 'https://pilot-linea.ultiverse.io',
+        'Referer': 'https://pilot-linea.ultiverse.io/',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"Windows"',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-site',
+        'Ul-Auth-Address': address,
+        'Ul-Auth-Token': token,
+        'User-Agent': random_ua()
+    }

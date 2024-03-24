@@ -37,7 +37,7 @@ def process_account(account_number, logger):
                 manager = LineaTxnManager(account.privatekey, account.proxystring)
 
                 tasks_action_map = {
-                    # 'Task_101': dummy_function_1,
+                    # 'Task_101': dummy_function_2,
                     # 'Task_102': dummy_function_2,
                     # 'Task_103': dummy_function_1,
                     # 'Task_104': dummy_function_2,
@@ -68,7 +68,7 @@ def process_account(account_number, logger):
                     # 'Task_506': dummy_function_1,
                     # 'Task_507': dummy_function_2,
                     'Task_508': manager.adopt_cat_call,
-                    # 'Task_509': dummy_function_2,
+                    'Task_509': manager.mint_ultipilots,
                     'Task_601': manager.mint_NFTbadge,
                     'Task_602': manager.mint_battlemon,
                     # 'Task_603': dummy_function_2,

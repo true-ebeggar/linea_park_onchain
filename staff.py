@@ -55,6 +55,111 @@ class LineaTxnManager:
         self.address = self.account.address
         self.yooldo_token = None
 
+    def _signIn_ulti_pilot(self):
+        try:
+            message = self._get_signature_u_p()
+            if message is None:
+                logger.error("message not arrive")
+                return None
+
+            signature = self.account.sign_message(encode_defunct(text=message))
+            payload = {
+                "address": str(self.address),
+                "signature": str(signature.signature.hex()),
+                "chainId": 59144
+            }
+            headers = ultipilot_headers_2()
+            response = requests.post(url='https://account-api.ultiverse.io/api/wallets/signin',
+                                     proxies=self.session.proxies, json=payload, headers=headers)
+
+            if response.status_code == 201:
+                data = response.json()
+                if data['success']:
+                    access_token = data['data']['access_token']
+                    self.ultipilot_token = access_token
+                    logger.success('got ulti-pilot signIn token')
+                    return access_token
+            else:
+                logger.error(f"wrong status code - {response.status_code}")
+                return None
+
+        except Exception as e:
+            logger.error(f"error while signIn [ulti-pilot]: {e}")
+            return None
+
+    def _get_signature_u_p(self):
+        try:
+            headers = ultipilot_headers_1()
+            payload = {
+                "address": str(self.address),
+                "feature": "assets-wallet-login",
+                "chainId": 59144}
+
+            response = requests.post(url='https://account-api.ultiverse.io/api/user/signature',
+                                     proxies=self.session.proxies, json=payload, headers=headers)
+
+            if response.status_code == 201:
+                message = response.json()['data']["message"]
+                return message
+        except Exception as e:
+            logger.error("error while getting message [ulti-pilot]"
+                         f"\nError: {e}")
+        return None
+
+    def _register_ultipilot(self):
+        try:
+            token = self.ultipilot_token
+            payload = {"referralCode": "Linea", "chainId": '59144'}
+            response = requests.post(url='https://pml.ultiverse.io/api/register/sign', proxies=self.session.proxies,
+                                     headers=ultipilot_headers_3(address=self.address, token=token), json=payload)
+            # print(json.dumps(response.json(), indent=4))
+            if response.json()['success'] is False and 'Wallet already registered' in response.json()['err']:
+                logger.warning("wallet is already register on ulti-pilots, wich is good...")
+                return True
+            elif response.json()['success'] is True:
+                return True
+            else:
+                logger.error("unknown response format")
+                return False
+        except Exception as e:
+            logger.error('error while wallet registration [ulti-pilots]'
+                         f'error: {e}')
+            return False
+
+    def _get_tx_data_ultipilot(self):
+        try:
+            self._signIn_ulti_pilot()
+            if self.ultipilot_token is None:
+                return
+            reg = self._register_ultipilot()
+            if not reg:
+                return
+
+            silhouette_traits = [
+                ["Optimistic", "Introverted", "Adventurous"],
+                ["Sensitive", "Confident", "Curious"],
+                ["Practical", "Social Butterfly", "Independent"],
+                ["Responsible", "Open-minded", "Humorous"],
+                ["Grounded", "Skeptical", "Altruistic"]
+            ]
+            chosen_traits = [random.choice(traits) for traits in silhouette_traits]
+            payload = {
+                "meta": chosen_traits,
+                "chainId": 59144
+            }
+            token = self.ultipilot_token
+            response = requests.post(url='https://pml.ultiverse.io/api/register/mint', proxies=self.session.proxies,
+                                     headers=ultipilot_headers_3(address=self.address, token=token), json=payload)
+
+            data = response.json().get('data', {})
+            deadline = data.get('deadline')
+            attributeHash = data.get('attributeHash')
+            signature = data.get('signature')
+            return deadline, attributeHash, signature
+        except Exception as e:
+            logger.error('error while getting txn data for ulti-pilots mint'
+                         f'\nerror: {e}')
+            return None
     def _submit_and_log_transaction(self, txn):
         try:
             signed_txn = self.w3.eth.account.sign_transaction(txn, self.private_key)
@@ -682,6 +787,42 @@ class LineaTxnManager:
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             }
 
+            if self._submit_and_log_transaction(txn):
+                logger.info("going to send second second txn for bonus-task")
+                data = "0x1249c58b"
+                gas = random.randint(100000, 150000)
+                gas_price = get_gas()
+                txn = {
+                    'to': self.w3.to_checksum_address(expedition_legacy_contract_2),
+                    'value': int(self.w3.to_wei(0.00015, 'ether')),
+                    'gas': gas,
+                    'data': data,
+                    'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                    'nonce': self.w3.eth.get_transaction_count(self.address),
+                }
+                return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_ultipilots(self):
+        deadline, attributeHash, signature = self._get_tx_data_ultipilot()
+        if deadline is None or attributeHash is None or signature is None:
+            logger.warning("txn data is not received, dropping mint")
+        try:
+            contract_address = self.w3.to_checksum_address(ultipilot_contract)
+            with open('ABI/SBTGenesis.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(250000, 350000)
+            txn = contract.functions.mintSBT(deadline, attributeHash, signature).build_transaction({
+                'value': 0,
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
+            logger.info("txn data send to blockchain")
             return self._submit_and_log_transaction(txn)
         except Exception as e:
             logger.critical(e)
