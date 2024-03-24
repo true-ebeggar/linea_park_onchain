@@ -575,7 +575,7 @@ class LineaTxnManager:
         try:
             txn = {
                 'to': self.w3.to_checksum_address(check_in_yooldo_contract),
-                'value': int(self.w3.to_wei(0.000002, 'ether')),
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
                 'gas': gas,
                 'data': data,
                 'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
@@ -823,6 +823,41 @@ class LineaTxnManager:
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             })
             logger.info("txn data send to blockchain")
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_nounce(self):
+        try:
+            contract_address = self.w3.to_checksum_address(nounce_contract)
+            with open('ABI/DropERC1155.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(250000, 350000)
+            txn = contract.functions.claim(
+                self.address,
+                0,
+                1,
+                "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                0,
+                (
+                    [
+                        "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    115792089237316195423570985008687907853269984665640564039457584007913129639935,
+
+                    0,
+                    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+                ),
+                "0x"
+            ).build_transaction({
+                'value': 0,
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
             return self._submit_and_log_transaction(txn)
         except Exception as e:
             logger.critical(e)
