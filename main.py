@@ -72,7 +72,7 @@ def process_account(account_number, logger):
                     'Task_601': manager.mint_NFTbadge,
                     'Task_602': manager.mint_battlemon,
                     # 'Task_603': dummy_function_2,
-                    'Task_604': manager.mint_expedition_legacy,
+                    # 'Task_604': manager.mint_expedition_legacy,
                     # 'Task_605': dummy_function_1,
                     # 'Task_606': dummy_function_2,
                     # 'Task_607': dummy_function_1,
