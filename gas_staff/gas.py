@@ -6,7 +6,6 @@ from linea_park_onchain.blockchain_data import blockchain_data
 
 
 def gas_gate():
-    start_time = time.time()
     while True:
         try:
             w3 = Web3(Web3.HTTPProvider(blockchain_data.linea.rpc))
@@ -16,15 +15,11 @@ def gas_gate():
                 logger.success(f"gas: {proposed_gas_price} < {MAX_GAS}")
                 return proposed_gas_price
             else:
-                logger.error(f"gas: {proposed_gas_price} > {MAX_GAS}")
+                logger.error(f"gas: {proposed_gas_price} > {MAX_GAS}, sleep...")
         except Exception:
             time.sleep(1)
             pass
-        elapsed_time = time.time() - start_time
-        if elapsed_time >= 10:
-            logger.warning("unable to get gas after 10-sec.")
-            return None
-        time.sleep(1)
+        time.sleep(30)
 
 
 def get_gas():
@@ -39,7 +34,7 @@ def get_gas():
             time.sleep(1)
             pass
         elapsed_time = time.time() - start_time
-        if elapsed_time >= 10:
-            logger.warning("unable to get gas after 10-sec.")
+        if elapsed_time >= 60:
+            logger.warning("unable to get gas after 60-sec.")
             return None
         time.sleep(1)
