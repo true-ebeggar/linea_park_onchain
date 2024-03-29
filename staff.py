@@ -6,7 +6,7 @@ import json
 import requests
 from html.parser import HTMLParser
 from eth_account.messages import encode_defunct
-from web3 import Web3, HTTPProvider
+from web3 import HTTPProvider
 from eth_account import Account
 
 
@@ -126,7 +126,7 @@ class LineaTxnManager:
                          f'error: {e}')
             return False
 
-    def _get_tx_data_ultipilot(self):
+    def _get_txn_data_ultipilot(self):
         try:
             self._signIn_ulti_pilot()
             if self.ultipilot_token is None:
@@ -160,6 +160,7 @@ class LineaTxnManager:
             logger.error('error while getting txn data for ulti-pilots mint'
                          f'\nerror: {e}')
             return None
+
     def _submit_and_log_transaction(self, txn):
         try:
             signed_txn = self.w3.eth.account.sign_transaction(txn, self.private_key)
@@ -805,10 +806,68 @@ class LineaTxnManager:
             logger.critical(e)
             return 0
 
+    def mint_micro3(self):
+        try:
+            contract_address = self.w3.to_checksum_address(micro_nft_contract)
+            with open('ABI/MicroNFTV2.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            txn = contract.functions.purchase(1).build_transaction({
+                'value': int(self.w3.to_wei(0.000057021626290324, 'ether')),
+                'gas': 275426,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
+
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_alien_nft(self):
+        data = '0xefef39a10000000000000000000000000000000000000000000000000000000000000001'
+        gas = random.randint(300000, 400000)
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(alien_swap_nft_contract),
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
+                'gas': gas,
+                'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_agg_genesis_something(self):
+        data = '0x1249c58b'
+        gas = random.randint(200000, 250000)
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(agg_world_contract),
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
+                'gas': gas,
+                'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
     def mint_ultipilots(self):
-        deadline, attributeHash, signature = self._get_tx_data_ultipilot()
+        deadline, attributeHash, signature = self._get_txn_data_ultipilot()
         if deadline is None or attributeHash is None or signature is None:
             logger.warning("txn data is not received, dropping mint")
+            return 0
         try:
             contract_address = self.w3.to_checksum_address(ultipilot_contract)
             with open('ABI/SBTGenesis.json', 'r') as abi:
@@ -823,6 +882,77 @@ class LineaTxnManager:
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             })
             logger.info("txn data send to blockchain")
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def comic_book_wrap(self):
+        if not self.mint_comic_book():
+            logger.warning('failed to mint comic book')
+        logger.info(f"address {self.address} going to execute second txn for a bonus task")
+        return self.claim_comic_book()
+
+    def claim_comic_book(self):
+        # logger.info(f"address {self.address} going to execute second txn for a bonus task")
+        with open('ABI/DropERC1155.json', 'r') as abi:
+            contract_abi = json.load(abi)
+        contract_address = self.w3.to_checksum_address(comic_book_claim_contract)
+        contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+        gas = random.randint(200000, 250000)
+
+        txn = contract.functions.claim(
+            str(self.address),
+            6,
+            1,
+            self.w3.to_checksum_address("0x21d624c846725ABe1e1e7d662E9fB274999009Aa"),
+            0,
+            (
+                [
+                    "0x0000000000000000000000000000000000000000000000000000000000000000"
+                ],
+                1,
+                0,
+                self.w3.to_checksum_address("0x21d624c846725ABe1e1e7d662E9fB274999009Aa"),
+            ),
+            "0x"
+        ).build_transaction({
+            'value': 0,
+            'gas': gas,
+            'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+            'nonce': self.w3.eth.get_transaction_count(self.address),
+        })
+        return self._submit_and_log_transaction(txn)
+
+    def mint_comic_book(self):
+        try:
+            contract_address = self.w3.to_checksum_address(comic_book_contract)
+            with open('ABI/DropERC1155.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(250000, 350000)
+            txn = contract.functions.claim(
+                self.address,
+                1,
+                1,
+                "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                100000000000000,
+                (
+                    [
+                        "0x0000000000000000000000000000000000000000000000000000000000000000"
+                    ],
+                    1,
+                    100000000000000,
+                    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+                ),
+                "0x"
+            ).build_transaction({
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
             return self._submit_and_log_transaction(txn)
         except Exception as e:
             logger.critical(e)
@@ -868,4 +998,4 @@ if __name__ == "__main__":
     key = ''
     proxy = ''
     m = LineaTxnManager(key, proxy)
-    m.yooldo_random_defence_wrap()
+    f = m.mint_agg_genesis_something()

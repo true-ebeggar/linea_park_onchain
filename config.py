@@ -1,6 +1,6 @@
 IMAP_SERVER_LINK = 'imap.gmail.com'
 
-MAX_GAS = 0.9
+MAX_GAS = 1.2
 
 MAX_RETRIES = 2
 SHUFFLE_ACCOUNTS = True
