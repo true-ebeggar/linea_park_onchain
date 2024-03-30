@@ -89,8 +89,8 @@ def process_account(account_number, logger):
                     # 'Task_707': dummy_function_2,
                     # 'Task_708': dummy_function_1,
                     # 'Task_709': dummy_function_2,
-                    # 'Task_710': dummy_function_1,
-                    # 'Task_711': dummy_function_2,
+                    'Task_710': manager.mint_nft_nft,
+                    'Task_711': manager.mint_arena_nft,
                     # 'Task_801': dummy_function_1,
                     # 'Task_802': dummy_function_2,
                     # 'Task_803': dummy_function_1

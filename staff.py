@@ -814,12 +814,34 @@ class LineaTxnManager:
             contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
 
             txn = contract.functions.purchase(1).build_transaction({
-                'value': int(self.w3.to_wei(0.000057021626290324, 'ether')),
+                'value': int(self.w3.to_wei(0.00006, 'ether')),
                 'gas': 275426,
                 'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             })
 
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_nft_nft(self):
+        random_metadata = ''.join(random.choices(string.ascii_letters + string.digits, k=59))
+        metadata_url = f"https://ipfs.io/ipfs/{random_metadata}/metadata.json"
+
+        try:
+            contract_address = self.w3.to_checksum_address(nft_contract)
+            with open('ABI/NFT.json', 'r') as abi:
+                contract_abi = json.load(abi)
+            contract = self.w3.eth.contract(address=contract_address, abi=contract_abi)
+
+            gas = random.randint(300000, 400000)
+            txn = contract.functions.mint(metadata_url).build_transaction({
+                'value': int(self.w3.to_wei(0.0001, 'ether')),
+                'gas': gas,
+                'maxFeePerGas': int(self.w3.to_wei(MAX_GAS, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            })
             return self._submit_and_log_transaction(txn)
         except Exception as e:
             logger.critical(e)
@@ -836,6 +858,27 @@ class LineaTxnManager:
                 'value': int(self.w3.to_wei(0.0001, 'ether')),
                 'gas': gas,
                 'data': data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def mint_arena_nft(self):
+        v = self.address.replace('0x', '')
+        padded_address = v.rjust(64, '0')
+        padded_data = '0x40d097c3' + padded_address
+        gas = random.randint(100000, 150000)
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(arena_nft_contract),
+                'value': 0,
+                'gas': gas,
+                'data': padded_data,
                 'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             }
@@ -894,7 +937,6 @@ class LineaTxnManager:
         return self.claim_comic_book()
 
     def claim_comic_book(self):
-        # logger.info(f"address {self.address} going to execute second txn for a bonus task")
         with open('ABI/DropERC1155.json', 'r') as abi:
             contract_abi = json.load(abi)
         contract_address = self.w3.to_checksum_address(comic_book_claim_contract)
@@ -996,6 +1038,6 @@ class LineaTxnManager:
 
 if __name__ == "__main__":
     key = ''
-    proxy = ''
+    proxy = 'AFL1712902:ACQST259@213.145.91.199:5488'
     m = LineaTxnManager(key, proxy)
-    f = m.mint_agg_genesis_something()
+    f = m.mint_arena_nft()
