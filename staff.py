@@ -3,6 +3,8 @@ import string
 import datetime
 
 import json
+from datetime import datetime
+
 import requests
 from html.parser import HTMLParser
 from eth_account.messages import encode_defunct
@@ -776,7 +778,7 @@ class LineaTxnManager:
 
     def mint_expedition_legacy(self):
         data = "0x1249c58b"
-        gas = random.randint(100000, 150000)
+        gas = 81555
         gas_price = get_gas()
         try:
             txn = {
@@ -791,7 +793,7 @@ class LineaTxnManager:
             if self._submit_and_log_transaction(txn):
                 logger.info("going to send second second txn for bonus-task")
                 data = "0x1249c58b"
-                gas = random.randint(100000, 150000)
+                gas = 81555
                 gas_price = get_gas()
                 txn = {
                     'to': self.w3.to_checksum_address(expedition_legacy_contract_2),
@@ -879,6 +881,25 @@ class LineaTxnManager:
                 'value': 0,
                 'gas': gas,
                 'data': padded_data,
+                'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
+                'nonce': self.w3.eth.get_transaction_count(self.address),
+            }
+            return self._submit_and_log_transaction(txn)
+        except Exception as e:
+            logger.critical(e)
+            return 0
+
+    def zace_main(self):
+        data = '0xbaeb0718'
+        gas = random.randint(300000, 400000)
+        gas_price = get_gas()
+
+        try:
+            txn = {
+                'to': self.w3.to_checksum_address(zace_contract),
+                'value': int(self.w3.to_wei(0.00005, 'ether')),
+                'gas': gas,
+                'data': data,
                 'gasPrice': int(self.w3.to_wei(gas_price, 'gwei')),
                 'nonce': self.w3.eth.get_transaction_count(self.address),
             }
@@ -1038,6 +1059,6 @@ class LineaTxnManager:
 
 if __name__ == "__main__":
     key = ''
-    proxy = 'AFL1712902:ACQST259@213.145.91.199:5488'
+    proxy = ''
     m = LineaTxnManager(key, proxy)
-    f = m.mint_arena_nft()
+    f = m.w3

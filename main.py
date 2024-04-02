@@ -19,6 +19,7 @@ def dummy_function_1(account_number, logger):
     logger.info(f"Performing dummy function 1 for account {account_number}")
     time.sleep(random.uniform(1, 5))
 
+
 def dummy_function_2(account_number, logger):
     logger.info(f"Performing dummy function 2 for account {account_number}")
     time.sleep(random.uniform(1, 5))
@@ -80,7 +81,7 @@ def process_account(account_number, logger):
                     # 'Task_609': dummy_function_1,
                     # 'Task_610': dummy_function_2,
                     # 'Task_611': dummy_function_1,
-                    # 'Task_701': dummy_function_2,
+                    'Task_701': manager.zace_main,
                     'Task_702': manager.mint_micro3,
                     'Task_703': manager.mint_alien_nft,
                     'Task_704': manager.comic_book_wrap,

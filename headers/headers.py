@@ -23,7 +23,26 @@ def yooldo_headers(content_length=None, yooldo_token=None):
         headers['Authorization'] = f'Bearer {yooldo_token}'
     return headers
 
-
+def tomo_headers(content_length=None, token=None):
+    headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Accept-Language": "en,en-US;q=0.9",
+        "Content-Type": "application/json",
+        "Origin": "https://h5.tomo.inc",
+        "Referer": "https://h5.tomo.inc/",
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Sec-Fetch-Dest": "empty",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Site": "cross-site",
+        "User-Agent": random_ua(),
+    }
+    if content_length is not None:
+        headers['Content-Length'] = str(content_length)
+    if token is not None:
+        headers['Authorization'] = f'Bearer {token}'
+    return headers
 def lineascan_headers():
     return {
         'Accept': 'application/json, text/javascript, */*; q=0.01',

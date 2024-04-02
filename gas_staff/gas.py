@@ -29,7 +29,8 @@ def get_gas():
             w3 = Web3(Web3.HTTPProvider(blockchain_data.linea.rpc))
             gas_price = w3.eth.gas_price
             proposed_gas_price = gas_price / 1e9
-            return proposed_gas_price
+            adjustment = int(proposed_gas_price * 1.2)
+            return adjustment
         except Exception:
             time.sleep(1)
             pass
