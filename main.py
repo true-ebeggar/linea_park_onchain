@@ -87,7 +87,7 @@ def process_account(account_number, logger):
                     'Task_704': manager.comic_book_wrap,
                     # 'Task_705': dummy_function_2,
                     'Task_706': manager.mint_agg_genesis_something,
-                    # 'Task_707': dummy_function_2,
+                    'Task_707': manager.bilinear_claim,
                     # 'Task_708': dummy_function_1,
                     # 'Task_709': dummy_function_2,
                     'Task_710': manager.mint_nft_nft,

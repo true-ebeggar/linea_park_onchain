@@ -9,7 +9,7 @@ class BlockchainNetwork:
 
 # Creating instances for each network
 arbitrum = BlockchainNetwork("https://rpc.ankr.com/arbitrum", "https://arbiscan.io/tx/", "ETH", 42161)
-linea = BlockchainNetwork('https://linea.drpc.org', 'https://lineascan.build/tx/', 'ETH', 59144)
+linea = BlockchainNetwork('https://1rpc.io/linea', 'https://lineascan.build/tx/', 'ETH', 59144)
 zora = BlockchainNetwork('https://rpc.zora.energy', 'https://explorer.zora.energy/tx/', 'ETH', 7777777)
 arbitrum_nova = BlockchainNetwork("https://nova.arbitrum.io/rpc", "https://nova.arbiscan.io/tx/", "ETH", 42170)
 avalanche = BlockchainNetwork("https://rpc.ankr.com/avalanche", "https://snowtrace.io/tx/", "AVAX", 43114)
